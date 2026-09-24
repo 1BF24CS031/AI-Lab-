@@ -1,0 +1,76 @@
+import random
+import time
+
+class Room:
+    def __init__(self, room_id, is_dirty=False):
+        self.room_id = room_id
+        self.is_dirty = is_dirty
+
+    def __str__(self):
+        return f"Room {self.room_id}: {'Dirty' if self.is_dirty else 'Clean'}"
+
+class VacuumCleanerAgent:
+    def __init__(self, num_rooms):
+        self.location = 0  # Start in Room 0
+        self.rooms = [Room(i, is_dirty=(random.random() < 0.5)) for i in range(num_rooms)]
+        self.action_cost = 0
+
+    def perceive(self):
+        """Perceives the current state of the room."""
+        return self.rooms[self.location].is_dirty, self.location
+
+    def reflect_and_act(self, is_dirty, current_location):
+        """Simple reflex agent rule: if dirty, clean; otherwise, move."""
+        if is_dirty:
+            print(f"Agent at Room {current_location} is Dirty. Cleaning...")
+            self.rooms[current_location].is_dirty = False
+            self.action_cost += 1
+            return "CLEAN"
+        else:
+            # Move to the next room (cyclically)
+            next_location = (current_location + 1) % len(self.rooms)
+            print(f"Agent at Room {current_location} is Clean. Moving to Room {next_location}.")
+            self.location = next_location
+            self.action_cost += 1
+            return "MOVE"
+
+    def is_goal_state(self):
+        """Checks if all rooms are clean."""
+        return all(not room.is_dirty for room in self.rooms)
+
+    def run(self, max_steps=100):
+        """Runs the vacuum cleaner agent until all rooms are clean or max_steps reached."""
+        print("\n--- Initial State ---")
+        for room in self.rooms:
+            print(room)
+        print("---------------------")
+        print(f"Agent starts at Room {self.location}\n")
+
+        step = 0
+        while not self.is_goal_state() and step < max_steps:
+            print(f"--- Step {step + 1} ---")
+            is_dirty, current_location = self.perceive()
+            action = self.reflect_and_act(is_dirty, current_location)
+            for room in self.rooms:
+                print(room)
+            print(f"Action taken: {action}. Total cost: {self.action_cost}\n")
+            time.sleep(0.5) # Simulate real-time actions
+            step += 1
+
+        print("--- Final State ---")
+        for room in self.rooms:
+            print(room)
+        if self.is_goal_state():
+            print("Goal Achieved! All rooms are clean.")
+        else:
+            print("Max steps reached. Not all rooms are clean.")
+        print(f"Total actions (cost): {self.action_cost}")
+
+
+if __name__ == '__main__':
+    num_rooms_to_clean = int(input("Enter the number of rooms (n): "))
+    if num_rooms_to_clean <= 0:
+        print("Number of rooms must be positive.")
+    else:
+        agent = VacuumCleanerAgent(num_rooms_to_clean)
+        agent.run()
